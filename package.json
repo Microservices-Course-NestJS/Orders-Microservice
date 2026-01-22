@@ -33,6 +33,7 @@
     "dotenv": "^17.2.3",
     "jest": "^30.2.0",
     "joi": "^18.0.2",
+    "nats": "^2.29.3",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "ts-jest": "^29.4.6"
@@ -76,5 +77,10 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
+  },
+  "overrides": {
+    "lodash": "^4.17.21",
+    "lodash-es": "^4.17.22",
+    "chevrotain": "^11.0.0"
   }
 }
