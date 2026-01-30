@@ -10,4 +10,5 @@ RUN npx prisma generate
 
 COPY . .
 
+
 EXPOSE 3002
