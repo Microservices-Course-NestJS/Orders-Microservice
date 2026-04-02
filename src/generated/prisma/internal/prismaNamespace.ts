@@ -80,12 +80,12 @@ export type PrismaVersion = {
 }
 
 /**
- * Prisma Client JS version: 7.2.0
- * Query Engine version: 0c8ef2ce45c83248ab3df073180d5eda9e8be7a3
+ * Prisma Client JS version: 7.4.1
+ * Query Engine version: 55ae170b1ced7fc6ed07a15f110549408c501bb3
  */
 export const prismaVersion: PrismaVersion = {
-  client: "7.2.0",
-  engine: "0c8ef2ce45c83248ab3df073180d5eda9e8be7a3"
+  client: "7.4.1",
+  engine: "55ae170b1ced7fc6ed07a15f110549408c501bb3"
 }
 
 /**
@@ -385,7 +385,8 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 
 export const ModelName = {
   Order: 'Order',
-  OrderItem: 'OrderItem'
+  OrderItem: 'OrderItem',
+  OrderReceipt: 'OrderReceipt'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -401,7 +402,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "order" | "orderItem"
+    modelProps: "order" | "orderItem" | "orderReceipt"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -553,6 +554,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    OrderReceipt: {
+      payload: Prisma.$OrderReceiptPayload<ExtArgs>
+      fields: Prisma.OrderReceiptFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.OrderReceiptFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderReceiptPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.OrderReceiptFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderReceiptPayload>
+        }
+        findFirst: {
+          args: Prisma.OrderReceiptFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderReceiptPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.OrderReceiptFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderReceiptPayload>
+        }
+        findMany: {
+          args: Prisma.OrderReceiptFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderReceiptPayload>[]
+        }
+        create: {
+          args: Prisma.OrderReceiptCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderReceiptPayload>
+        }
+        createMany: {
+          args: Prisma.OrderReceiptCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.OrderReceiptCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderReceiptPayload>[]
+        }
+        delete: {
+          args: Prisma.OrderReceiptDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderReceiptPayload>
+        }
+        update: {
+          args: Prisma.OrderReceiptUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderReceiptPayload>
+        }
+        deleteMany: {
+          args: Prisma.OrderReceiptDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.OrderReceiptUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.OrderReceiptUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderReceiptPayload>[]
+        }
+        upsert: {
+          args: Prisma.OrderReceiptUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderReceiptPayload>
+        }
+        aggregate: {
+          args: Prisma.OrderReceiptAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateOrderReceipt>
+        }
+        groupBy: {
+          args: Prisma.OrderReceiptGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OrderReceiptGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.OrderReceiptCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OrderReceiptCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -599,6 +674,7 @@ export const OrderScalarFieldEnum = {
   status: 'status',
   paid: 'paid',
   paidAt: 'paidAt',
+  stripeChargeId: 'stripeChargeId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -615,6 +691,17 @@ export const OrderItemScalarFieldEnum = {
 } as const
 
 export type OrderItemScalarFieldEnum = (typeof OrderItemScalarFieldEnum)[keyof typeof OrderItemScalarFieldEnum]
+
+
+export const OrderReceiptScalarFieldEnum = {
+  id: 'id',
+  orderId: 'orderId',
+  receiptUrl: 'receiptUrl',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type OrderReceiptScalarFieldEnum = (typeof OrderReceiptScalarFieldEnum)[keyof typeof OrderReceiptScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -820,6 +907,7 @@ export type PrismaClientOptions = ({
 export type GlobalOmitConfig = {
   order?: Prisma.OrderOmit
   orderItem?: Prisma.OrderItemOmit
+  orderReceipt?: Prisma.OrderReceiptOmit
 }
 
 /* Types for Logging */
