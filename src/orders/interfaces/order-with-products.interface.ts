@@ -1,4 +1,4 @@
-import { OrderStatus } from "src/generated/prisma/enums";
+import { OrderStatus } from "generated/prisma/enums";
 
 export interface OrderWithProducts {
     OrderItem: {
