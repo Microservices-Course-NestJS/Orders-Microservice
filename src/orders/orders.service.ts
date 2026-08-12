@@ -3,34 +3,35 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { PrismaService } from 'src/prisma.service';
 import { OrderPaginationDto } from './dto/order-pagination.dto';
-import { ChangeOrderStatusDto, productValidatorDto } from './dto';
+import { ChangeOrderStatusDto, PaidOrderDTO, productValidatorDto } from './dto';
 import { NATS_SERVICE } from 'src/config';
 import { firstValueFrom } from 'rxjs';
+import { OrderWithProducts } from './interfaces/order-with-products.interface';
 
 
 @Injectable()
-export class OrdersService{
+export class OrdersService {
 
   private readonly logger = new Logger('OrdersService')
   constructor(
     @Inject(NATS_SERVICE)
     private readonly natsClient: ClientProxy,
     private readonly prisma: PrismaService
-  ){}
+  ) { }
 
 
-    
+
   async create(createOrderDto: CreateOrderDto) {
 
     try {
 
-      const productIds: number[] = createOrderDto.items.map( item => item.productId)
+      const productIds: number[] = createOrderDto.items.map(item => item.productId)
 
       const products: productValidatorDto[] = await firstValueFrom(
-        this.natsClient.send({cmd: 'validate_products'}, productIds)
+        this.natsClient.send({ cmd: 'validate_products' }, productIds)
       );
 
-      const totalAmount = createOrderDto.items.reduce((acc, orderItem)=>{
+      const totalAmount = createOrderDto.items.reduce((acc, orderItem) => {
         const price = products.find(
           product => product.id === orderItem.productId
         )!.price;
@@ -57,9 +58,9 @@ export class OrdersService{
         },
         include: {
           OrderItem: {
-            select:{
+            select: {
               productId: true,
-              id:true,
+              id: true,
               price: true,
               quantity: true,
             }
@@ -70,47 +71,47 @@ export class OrdersService{
       return {
         ...order,
         OrderItem: order.OrderItem.map(item => ({
-            ...item,
-            name: products.find(product => product.id === item.productId)!.name
-          })
+          ...item,
+          name: products.find(product => product.id === item.productId)!.name
+        })
         )
       }
-      
+
     } catch (error) {
-      throw new RpcException({status: error.status, message: error.message})
+      throw new RpcException({ status: error.status, message: error.message })
     }
 
   }
 
   async findAll(orderPaginationDto: OrderPaginationDto) {
-    const totalPages = await this.prisma.order.count({where:{status: orderPaginationDto.status}});
+    const totalPages = await this.prisma.order.count({ where: { status: orderPaginationDto.status } });
 
     const currentPage = orderPaginationDto.page;
     const perPage = orderPaginationDto.limit;
 
     return {
       data: await this.prisma.order.findMany({
-        skip: (currentPage!-1)*perPage!,
+        skip: (currentPage! - 1) * perPage!,
         take: perPage,
         where: {
           status: orderPaginationDto.status
         }
       }),
-      meta:{
+      meta: {
         total: totalPages,
         page: currentPage,
-        lastPage: Math.ceil(totalPages/perPage!)
+        lastPage: Math.ceil(totalPages / perPage!)
       }
     };
   }
 
   async findOne(id: string) {
-    
+
 
     try {
 
       const order = await this.prisma.order.findUnique({
-        where: {id},
+        where: { id },
         include: {
           OrderItem: {
             select: {
@@ -120,19 +121,20 @@ export class OrdersService{
             }
           }
         }
-      }) 
-    
-      if(!order){
+      })
+
+      if (!order) {
         throw new RpcException({
           status: HttpStatus.NOT_FOUND,
-          message: `Error ${HttpStatus.NOT_FOUND}, no se encontro la orden con id: ${id}`});
+          message: `Error ${HttpStatus.NOT_FOUND}, no se encontro la orden con id: ${id}`
+        });
       }
       const productsIds: number[] = order.OrderItem.map(item => item.productId)
       const products: productValidatorDto[] = await firstValueFrom(
-        this.natsClient.send({cmd: 'validate_products'},productsIds)
+        this.natsClient.send({ cmd: 'validate_products' }, productsIds)
       )
-  
-      const {OrderItem, ...data} = order;
+
+      const { OrderItem, ...data } = order;
       return {
         ...data,
         Items: order.OrderItem.map(item => ({
@@ -140,27 +142,63 @@ export class OrdersService{
           name: products.find(product => product.id === item.productId)!.name
         }))
       }
-      
+
     } catch (error) {
-      throw new RpcException({status: error.stats, message: error.message});
+      throw new RpcException({ status: error.stats, message: error.message });
     }
   }
 
-  async changeOrderStatus(changeOrderStatusDto: ChangeOrderStatusDto){
+  async changeOrderStatus(changeOrderStatusDto: ChangeOrderStatusDto) {
     console.log('Entra al change status')
-    const { id , status } = changeOrderStatusDto;
+    const { id, status } = changeOrderStatusDto;
 
     const order = await this.findOne(id);
-    if(order.status === status){
+    if (order.status === status) {
       return order
     }
     return this.prisma.order.update({
-      where: {id},
-      data:{
+      where: { id },
+      data: {
         status
       }
     })
 
   }
-  
+  async createPaymentSession(order: OrderWithProducts) {
+    const paymentSession = await firstValueFrom(
+      this.natsClient.send('create.payments.session', {
+        orderId: order.id,
+        currency: "USD",
+        items: order.OrderItem.map(item => ({
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity
+        }))
+      })
+    );
+    return paymentSession;
+  }
+
+
+
+  async paidOrder(paidOrderDto: PaidOrderDTO) {
+    this.logger.log('Paid order')
+    this.logger.log({ paidOrderDto })
+    const updatedOrder = await this.prisma.order.update({
+      where: { id: paidOrderDto.orderId },
+      data: {
+        status: 'PAID',
+        paid: true,
+        paidAt: new Date(),
+        stripeChargeId: paidOrderDto.stripePaymentId,
+        //La relacion
+        orderReceipts: {
+          create: {
+            receiptUrl: paidOrderDto.receiptUrl,
+          }
+        }
+      }
+    })
+    return {...updatedOrder}
+  }
 }

@@ -5,48 +5,57 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client"
-  output = "../src/generated/prisma"
-  moduleFormat  = "cjs"
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  moduleFormat = "cjs"
 }
 
 datasource db {
   provider = "postgresql"
 }
 
-enum OrderStatus{
+enum OrderStatus {
   PENDING
   DELIVERED
-  CANCELLED  
+  CANCELLED
+  PAID
 }
 
-model Order{
-  id String @id() @default(uuid())
+model Order {
+  id          String @id() @default(uuid())
   totalAmount Float
-  totalItems Int
+  totalItems  Int
 
   status OrderStatus @default(PENDING)
-  paid Boolean @default(false)
+  paid   Boolean     @default(false)
   paidAt DateTime?
 
+  stripeChargeId String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-
-  OrderItem OrderItem[]
+  OrderItem     OrderItem[]
+  orderReceipts OrderReceipt? //RELACION 1 A 1, puede venir o puede que no
 }
 
-model OrderItem{
-
-  id String @id @default(uuid())
+model OrderItem {
+  id        String @id @default(uuid())
   productId Int
-  quantity Int
-  price Float
+  quantity  Int
+  price     Float
 
-  Order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  Order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
   orderId String
-
 }
 
+model OrderReceipt {
+  id String @id @default(uuid())
 
+  order   Order  @relation(fields: [orderId], references: [id])
+  orderId String @unique // Importante decir que esto es unico ya que la relacion es 1 a 1
+
+  receiptUrl String 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}

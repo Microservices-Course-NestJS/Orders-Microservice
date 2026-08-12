@@ -1,0 +1,23 @@
+
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  entrypoint: 'bash'
+  args:
+    - -c
+    - |
+      docker build -t us-south1-docker.pkg.dev/gen-lang-client-0767378085/image-registry/orders-ms -f dockerfile.prod --platform=linux/amd64 --build-arg ORDERS_DATABASE_URL=$$DATABASE_URL .
+  secretEnv: ['DATABASE_URL']
+
+- name: 'gcr.io/cloud-builders/docker'
+  args:
+    [
+      'push',
+      'us-south1-docker.pkg.dev/gen-lang-client-0767378085/image-registry/orders-ms',
+    ]
+
+availableSecrets:
+  secretManager:
+  - versionName: projects/252283960246/secrets/ORDERS_DATABASE_DB/versions/1
+    env: 'DATABASE_URL'
+options:
+  logging: CLOUD_LOGGING_ONLY
